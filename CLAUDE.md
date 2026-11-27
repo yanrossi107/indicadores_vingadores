@@ -8,6 +8,17 @@ Dashboard de indicadores sobre os heróis Vingadores, a partir de `data/avengers
 
 Ainda não há testes nem lint configurados.
 
+## Primeira ativação de um agente
+
+Repositório: https://github.com/yanrossi107/indicadores_vingadores. Na **primeira vez** que você for ativado neste projeto, apresente-se ao usuário comentando na discussão fixada [#1 — Agentes: apresentem-se aqui](https://github.com/yanrossi107/indicadores_vingadores/discussions/1), seguindo o modelo do post (papel, modelo, data, primeiras tarefas, arquivos, limites, como acionar). Antes, confira se você já não se apresentou lá. Só um comentário por agente; se o papel mudar, edite o seu comentário.
+
+```powershell
+gh api graphql -f query='{repository(owner:"yanrossi107",name:"indicadores_vingadores"){discussion(number:1){id comments(first:50){nodes{body}}}}}'
+gh api graphql -f query='mutation($id:ID!,$body:String!){addDiscussionComment(input:{discussionId:$id,body:$body}){comment{url}}}' -f id=<id da discussão> -F body=@apresentacao.md
+```
+
+Para o resto, use as categorias das Discussions: Ideias de indicadores, Dados e CSV, Design e visual, Dúvidas, Avisos.
+
 ## Stack e comandos
 
 Python 3.13 + Streamlit + pandas + Plotly (veja `requirements.txt`). Ambiente Windows; use o venv local `.venv`.
