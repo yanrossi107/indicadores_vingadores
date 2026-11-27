@@ -1,6 +1,7 @@
 """Carga e limpeza da base de heróis (data/avengers.csv)."""
 
 from pathlib import Path
+from urllib.parse import unquote
 
 import pandas as pd
 
@@ -21,6 +22,15 @@ RENAME = {
 DEATH_COLS = [f"Death{i}" for i in range(1, 6)]
 RETURN_COLS = [f"Return{i}" for i in range(1, 6)]
 UNKNOWN_YEAR = 1900
+EARTH_SUFFIX = r"_\(Earth-\d+\)#?$"
+
+
+def _nome_pela_url(url: pd.Series) -> pd.Series:
+    """Deriva o nome do último segmento da URL (ex.: `Dinah_Soar_(Earth-616)#` -> `Dinah Soar`)."""
+    segmento = url.str.rstrip("/").str.rsplit("/", n=1).str[-1]
+    segmento = segmento.map(unquote, na_action="ignore")
+    nome = segmento.str.replace(EARTH_SUFFIX, "", regex=True).str.replace("_", " ").str.strip()
+    return nome.replace("", pd.NA)
 
 
 def load_heroes(path: Path = CSV_PATH) -> pd.DataFrame:
@@ -30,7 +40,8 @@ def load_heroes(path: Path = CSV_PATH) -> pd.DataFrame:
     is_yes = raw[DEATH_COLS + RETURN_COLS].eq("YES")
     df = raw[list(RENAME)].rename(columns=RENAME)
 
-    df["nome"] = df["nome"].fillna("(sem nome)").str.strip()
+    # Heróis sem Name/Alias no CSV: o nome é derivado da URL; "(sem nome)" fica só como fallback.
+    df["nome"] = df["nome"].fillna(_nome_pela_url(df["url"])).fillna("(sem nome)").str.strip()
     df["ativo"] = df["ativo"].eq("YES")
     df["genero"] = df["genero"].str.capitalize().map({"Male": "Masculino", "Female": "Feminino"})
     df["mortes"] = is_yes[DEATH_COLS].sum(axis=1)
