@@ -20,10 +20,20 @@ categorias = st.sidebar.multiselect("Categoria", sorted(df["categoria"].dropna()
 so_ativos = st.sidebar.checkbox("Somente ativos", value=False)
 ano_min, ano_max = int(df["ano_entrada"].min()), int(df["ano_entrada"].max())
 anos = st.sidebar.slider("Ano de entrada", ano_min, ano_max, (ano_min, ano_max))
-incluir_sem_ano = st.sidebar.checkbox("Incluir heróis sem ano de entrada", value=True)
+intervalo_completo = anos == (ano_min, ano_max)
+incluir_sem_ano = st.sidebar.checkbox(
+    "Incluir heróis sem ano de entrada",
+    value=True,
+    disabled=not intervalo_completo,
+    help="Só vale com o slider no intervalo completo. Com o intervalo restrito, "
+    "os heróis sem ano de entrada ficam de fora.",
+)
+if not intervalo_completo:
+    st.sidebar.caption("Intervalo restrito: heróis sem ano de entrada não entram no filtro.")
+incluir = incluir_sem_ano and intervalo_completo
 
 no_periodo = df["ano_entrada"].between(*anos).fillna(False)
-f = df[no_periodo | (incluir_sem_ano & df["ano_entrada"].isna())]
+f = df[no_periodo | (incluir & df["ano_entrada"].isna())]
 if generos:
     f = f[f["genero"].isin(generos)]
 if categorias:
